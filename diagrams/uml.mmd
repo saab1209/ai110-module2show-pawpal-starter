@@ -4,6 +4,7 @@ classDiagram
         +str email
         +List~Pet~ pets
         +add_pet(pet: Pet) void
+        +get_pet(pet_name: str) Optional~Pet~
         +get_all_tasks() List~Task~
     }
 
@@ -26,11 +27,13 @@ classDiagram
         +str frequency
         +bool completed
         +str pet_name
+        +date due_date
         +mark_complete() Optional~Task~
     }
 
     class Scheduler {
         +Owner owner
+        +sort_by_time() List~Task~
         +get_daily_schedule(sort_by: str) List~Task~
         +filter_tasks(pet_name: str, status: str) List~Task~
         +detect_conflicts() List~Tuple~Task, Task~~
@@ -39,5 +42,4 @@ classDiagram
 
     Owner "1" --> "*" Pet : owns
     Pet "1" --> "*" Task : has
-    Scheduler "1" --> "1" Owner : manages
-
+    Scheduler "1" --> "1" Owner : schedules

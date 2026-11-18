@@ -62,41 +62,53 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 Detected Time Conflicts: 1
   - Overlap: 'Morning Walk' (08:00) overlaps with 'Breakfast & Thyroid Pill' (08:15)
 
+
 ## 🧪 Testing PawPal+
 
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
 # Run with coverage:
-pytest --cov
+python -m pytest --cov
 ```
 
 Sample test output:
 
-```
-# Paste your pytest output here
+```text
+============================== test session starts ==============================
+collected 6 items
+
+tests/test_pawpal.py ......                                               [100%]
+
+============================== 6 passed in 0.03s ===============================
 ```
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()`, `Scheduler.get_daily_schedule()` | Parses 24-hour `"HH:MM"` times into minutes since midnight for chronological ordering, or sorts by `High` → `Medium` → `Low` priority. |
+| Filtering | `Scheduler.filter_tasks()` | Filters household tasks dynamically by `pet_name` and completion status (`all`, `pending`, or `completed`). |
+| Conflict handling | `Scheduler.detect_conflicts()` | Checks `[start, start + duration_minutes)` intervals across all pets and returns warning pairs without crashing the app. |
+| Recurring tasks | `Task.mark_complete()`, `Scheduler.complete_task()` | Uses `datetime.timedelta` (`+1 day` for `Daily`, `+7 days` for `Weekly`) to auto-schedule the next pending task upon completion. |
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+1. **Launch the App & View Household State:** Start the interface with `streamlit run app.py`. `st.session_state` initializes an `Owner` profile (*Salmaa*) with two pre-loaded pets (*Bella* the Dog and *Milo* the Cat) so data persists across every click.
+2. **Register a New Pet (Sidebar):** Enter a pet's name, species, and age in the **Add a New Pet** form and click **Register Pet** to add it to `owner.pets` and view live pending task counts.
+3. **Schedule a Care Routine:** Select a pet in **Schedule a Pet Care Task**, enter a task title, category (`Feeding`, `Walk`, `Medication`, `Appointment`, `Enrichment`), 24-hour time, duration, priority, and recurrence frequency, then click **Add Care Task**.
+4. **Review Conflict Warnings & Filter Schedule:** Any overlapping tasks (such as *Bella's Morning Walk* at `08:00` for 30m and *Milo's Thyroid Medication* at `08:15` for 15m) automatically trigger an `st.warning` banner. Use the dropdown controls to sort by time or priority and filter by pet or status.
+5. **Complete Routines & Trigger Recurrence:** Click **Complete** next to any pending task to mark it done; if the task is `Daily` or `Weekly`, PawPal+ immediately queues the next scheduled occurrence and shows a confirmation toast.
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+### Sample CLI Output (`python main.py`)
+```text
+=== Today's Schedule for Salmaa ===
+1. [08:00] Bella - Morning Walk (Walk | High | Daily) [Pending]
+2. [08:15] Milo - Thyroid Medication (Medication | High | Daily) [Pending]
+3. [18:00] Bella - Evening Kibble (Feeding | Medium | Daily) [Pending]
+4. [19:30] Milo - Play & Brush Session (Enrichment | Low | Once) [Pending]
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+Detected Time Conflicts: 1
+  - Overlap: 'Morning Walk' (08:00) overlaps with 'Thyroid Medication' (08:15)
+```
