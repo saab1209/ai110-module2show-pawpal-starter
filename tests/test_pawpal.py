@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from pawpal_system import Owner, Pet, Scheduler, Task
 
 
@@ -16,31 +17,56 @@ def test_add_task_increases_pet_task_count():
     assert pet.tasks[0].pet_name == "Bella"
 
 
-def test_scheduler_sorts_across_multiple_pets_and_detects_conflict():
+def test_sort_by_time_returns_chronological_order():
     owner = Owner(name="Salmaa")
     dog = Pet(name="Bella", species="Dog", age=3)
-    cat = Pet(name="Milo", species="Cat", age=2)
-
-    dog.add_task(Task(title="Walk", category="Walk", time="08:00", duration_minutes=30, priority="Medium"))
-    cat.add_task(Task(title="Meds", category="Medication", time="08:15", duration_minutes=15, priority="High"))
-
+    dog.add_task(Task(title="Evening Walk", category="Walk", time="18:30"))
+    dog.add_task(Task(title="Morning Walk", category="Walk", time="07:30"))
+    dog.add_task(Task(title="Midday Lunch", category="Feeding", time="12:15"))
     owner.add_pet(dog)
-    owner.add_pet(cat)
 
     scheduler = Scheduler(owner)
-    schedule = scheduler.get_daily_schedule(sort_by="time")
-    assert [t.title for t in schedule] == ["Walk", "Meds"]
-    assert len(scheduler.detect_conflicts()) == 1
+    sorted_titles = [t.title for t in scheduler.sort_by_time()]
+    assert sorted_titles == ["Morning Walk", "Midday Lunch", "Evening Walk"]
 
 
-def test_recurring_task_creates_next_occurrence():
+def test_recurring_daily_task_creates_next_day_occurrence():
+    today = date.today()
     owner = Owner(name="Salmaa")
     dog = Pet(name="Bella", species="Dog", age=3)
-    dog.add_task(Task(title="Daily Vitamin", category="Medication", time="09:00", frequency="Daily"))
+    dog.add_task(Task(title="Daily Vitamin", category="Medication", time="09:00", frequency="Daily", due_date=today))
     owner.add_pet(dog)
 
     scheduler = Scheduler(owner)
     next_task = scheduler.complete_task("Bella", "Daily Vitamin")
     assert next_task is not None
     assert next_task.completed is False
+    assert next_task.due_date == today + timedelta(days=1)
     assert len(dog.tasks) == 2
+
+
+def test_conflict_detection_flags_overlapping_and_duplicate_times():
+    owner = Owner(name="Salmaa")
+    dog = Pet(name="Bella", species="Dog", age=3)
+    cat = Pet(name="Milo", species="Cat", age=2)
+
+    dog.add_task(Task(title="Walk", category="Walk", time="08:00", duration_minutes=30))
+    cat.add_task(Task(title="Meds", category="Medication", time="08:00", duration_minutes=15))
+    owner.add_pet(dog)
+    owner.add_pet(cat)
+
+    scheduler = Scheduler(owner)
+    conflicts = scheduler.detect_conflicts()
+    assert len(conflicts) == 1
+    first_pair = conflicts[0]
+    assert first_pair[0].title == "Walk"
+    assert first_pair[1].title == "Meds"
+
+
+def test_edge_case_pet_with_no_tasks_returns_empty_schedule():
+    owner = Owner(name="Salmaa")
+    owner.add_pet(Pet(name="Mochi", species="Rabbit", age=1))
+    scheduler = Scheduler(owner)
+    assert scheduler.sort_by_time() == []
+    assert scheduler.detect_conflicts() == []
+

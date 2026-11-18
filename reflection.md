@@ -36,10 +36,16 @@
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+* **Considered Constraints:** The scheduler evaluates scheduled start time (`"HH:MM"`), task duration (`duration_minutes`), urgency (`High`, `Medium`, `Low`), recurrence frequency (`Once`, `Daily`, `Weekly`), pet ownership (`pet_name`), and completion status (`pending` vs. `completed`).
+* **How Priorities Were Decided:** Chronological start time and overlapping duration windows mattered most because pet routines—especially medications and feedings—are time-sensitive and a single owner cannot physically handle two active tasks at once. Priority level (`High` > `Medium` > `Low`) serves as the secondary sorting tie-breaker so urgent medical care always surfaces first when viewing by urgency.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+* **Scheduler Tradeoff:** `Scheduler.detect_conflicts()` flags any two incomplete tasks across the entire household whose `[start, start + duration_minutes)` time windows overlap, even if they belong to different pets or involve passive tasks.
+* **Why This Tradeoff Is Reasonable:** For a single pet owner managing daily routines at home, treating all overlapping time windows as potential collisions prevents missed medications or double-booked walks—making conservative conflict warnings far safer than allowing silent schedule overlaps.
 
 ---
 

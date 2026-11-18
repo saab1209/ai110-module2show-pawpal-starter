@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional, Tuple
 
 PRIORITY_ORDER = {"High": 0, "Medium": 1, "Low": 2}
@@ -16,22 +16,29 @@ class Task:
     frequency: str = "Once"  # "Once", "Daily", "Weekly"
     completed: bool = False
     pet_name: str = ""
+    due_date: date = field(default_factory=date.today)
 
     def mark_complete(self) -> Optional["Task"]:
-        """Mark task complete and return the next recurring Task if frequency is Daily or Weekly."""
+        """Mark task complete and return the next recurring Task shifted by timedelta if Daily or Weekly."""
         self.completed = True
-        if self.frequency in ("Daily", "Weekly"):
-            return Task(
-                title=self.title,
-                category=self.category,
-                time=self.time,
-                duration_minutes=self.duration_minutes,
-                priority=self.priority,
-                frequency=self.frequency,
-                completed=False,
-                pet_name=self.pet_name,
-            )
-        return None
+        if self.frequency == "Daily":
+            next_due = self.due_date + timedelta(days=1)
+        elif self.frequency == "Weekly":
+            next_due = self.due_date + timedelta(days=7)
+        else:
+            return None
+
+        return Task(
+            title=self.title,
+            category=self.category,
+            time=self.time,
+            duration_minutes=self.duration_minutes,
+            priority=self.priority,
+            frequency=self.frequency,
+            completed=False,
+            pet_name=self.pet_name,
+            due_date=next_due,
+        )
 
 
 @dataclass
@@ -105,6 +112,10 @@ class Scheduler:
         except ValueError:
             return 0
 
+    def sort_by_time(self) -> List[Task]:
+        """Return all owner tasks sorted chronologically by their 'HH:MM' time attribute."""
+        return sorted(self.owner.get_all_tasks(), key=lambda t: self._parse_minutes(t.time))
+
     def get_daily_schedule(self, sort_by: str = "time") -> List[Task]:
         """Retrieve all tasks from Owner and sort by chronological time or priority."""
         tasks = self.owner.get_all_tasks()
@@ -113,11 +124,11 @@ class Scheduler:
                 tasks,
                 key=lambda t: (PRIORITY_ORDER.get(t.priority, 1), self._parse_minutes(t.time)),
             )
-        return sorted(tasks, key=lambda t: self._parse_minutes(t.time))
+        return self.sort_by_time()
 
     def filter_tasks(self, pet_name: Optional[str] = None, status: str = "all") -> List[Task]:
         """Filter tasks across pets by pet_name and completion status ('all', 'pending', 'completed')."""
-        tasks = self.get_daily_schedule(sort_by="time")
+        tasks = self.sort_by_time()
         if pet_name and pet_name.lower() != "all":
             tasks = [t for t in tasks if t.pet_name.lower() == pet_name.lower()]
         if status.lower() == "pending":
