@@ -53,6 +53,14 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 #   09:00 — Feeding (10 min) [priority: high]
 #   ...
 ```
+=== Today's Schedule for Salma ===
+1. [08:00] Bella - Morning Walk (Walk | High | Daily) [Pending]
+2. [08:15] Milo - Breakfast & Thyroid Pill (Medication | High | Daily) [Pending]
+3. [18:00] Bella - Evening Kibble (Feeding | Medium | Daily) [Pending]
+4. [19:30] Milo - Play & Brush Session (Enrichment | Low | Once) [Pending]
+
+Detected Time Conflicts: 1
+  - Overlap: 'Morning Walk' (08:00) overlaps with 'Breakfast & Thyroid Pill' (08:15)
 
 ## 🧪 Testing PawPal+
 
